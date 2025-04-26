@@ -27,7 +27,7 @@ Unreal Engine 5のGameplayAbilitySystemプラグイン（GAS）についての�
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3.2 [BaseValueとCurrentValue](#concepts-a-value)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3.3 [Meta Attributes](#concepts-a-meta)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3.4 [Attributeの変更に応答する](#concepts-a-changes)  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3.5 [派生Attributes](#concepts-a-derived)  
+>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3.5 [Derived Attributes](#concepts-a-derived)  
 >    4.4 [Attribute Set](#concepts-as)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.1 [Attribute Setの定義](#concepts-as-definition)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.2 [Attribute Setの設計](#concepts-as-design)  
@@ -37,8 +37,8 @@ Unreal Engine 5のGameplayAbilitySystemプラグイン（GAS）についての�
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.2.3.1 [アイテム上の単純な浮動小数点数](#concepts-as-design-itemattributes-plainfloats)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.2.3.2 [アイテム上の`AttributeSet`](#concepts-as-design-itemattributes-attributeset)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.2.3.3 [アイテム上の`ASC`](#concepts-as-design-itemattributes-asc)  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.3 [属性の定義](#concepts-as-attributes)  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.4 [属性の初期化](#concepts-as-init)  
+>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.3 [Attributeの定義](#concepts-as-attributes)  
+>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.4 [Attributeの初期化](#concepts-as-init)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.5 [PreAttributeChange()](#concepts-as-preattributechange)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.6 [PostGameplayEffectExecute()](#concepts-as-postgameplayeffectexecute)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4.7 [OnAttributeAggregatorCreated()](#concepts-as-onattributeaggregatorcreated)  
@@ -60,7 +60,7 @@ Unreal Engine 5のGameplayAbilitySystemプラグイン（GAS）についての�
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12 [ゲームプレイエフェクト実行計算](#concepts-ge-ec)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12.1 [実行計算へのデータ送信](#concepts-ge-ec-senddata)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12.1.1 [SetByCaller](#concepts-ge-ec-senddata-setbycaller)  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12.1.2 [バックデータ属性計算修飾子](#concepts-ge-ec-senddata-backingdataattribute)  
+>    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12.1.2 [バックデータAttribute計算修飾子](#concepts-ge-ec-senddata-backingdataattribute)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12.1.3 [バックデータ一時変数計算修飾子](#concepts-ge-ec-senddata-backingdatatempvariable)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.12.1.4 [ゲームプレイエフェクトコンテキスト](#concepts-ge-ec-senddata-effectcontext)  
 >    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.5.13 [カスタム適用要件](#concepts-ge-car)  
@@ -144,7 +144,7 @@ Unreal Engine 5のGameplayAbilitySystemプラグイン（GAS）についての�
 >    7.1 [アビリティのバッチ処理](#optimizations-abilitybatching)  
 >    7.2 [ゲームプレイキューのバッチ処理](#optimizations-gameplaycuebatching)  
 >    7.3 [AbilitySystemComponentのレプリケーションモード](#optimizations-ascreplicationmode)  
->    7.4 [属性プロキシのレプリケーション](#optimizations-attributeproxyreplication)  
+>    7.4 [Attributeプロキシのレプリケーション](#optimizations-attributeproxyreplication)  
 >    7.5 [ASCの遅延読み込み](#optimizations-asclazyloading)  
 > 1. [品質向上の提案](#qol)  
 >    8.1 [ゲームプレイエフェクトコンテナ](#qol-gameplayeffectcontainers)  
@@ -175,13 +175,13 @@ Unreal Engine 5のGameplayAbilitySystemプラグイン（GAS）についての�
 <a name="intro"></a>
 ## 1. GameplayAbilitySystemプラグインの概要
 [公式ドキュメント](https://docs.unrealengine.com/en-US/Gameplay/GameplayAbilitySystem/index.html)より引用:
->Gameplay Ability Systemは、RPGやMOBAタイトルで見られるようなアビリティや属性を構築するための非常に柔軟なフレームワークです。このシステムを使用すると、ゲーム内のキャラクターが使用するアクションやパッシブアビリティ、これらのアクションの結果として蓄積または減少するさまざまな属性に影響を与えるステータス効果、使用を調整するための「クールダウン」タイマーやリソースコスト、アビリティのレベルやその効果を各レベルで変更する機能、パーティクルやサウンドエフェクトをアクティブ化する機能などを構築できます。簡単に言えば、このシステムは、ジャンプのようなシンプルなアビリティから、現代のRPGやMOBAタイトルにおけるお気に入りのキャラクターのアビリティセットのような複雑なものまで、ゲーム内アビリティを設計、実装、効率的にネットワーク化するのに役立ちます。
+>Gameplay Ability Systemは、RPGやMOBAタイトルで見られるようなアビリティやAttributeを構築するための非常に柔軟なフレームワークです。このシステムを使用すると、ゲーム内のキャラクターが使用するアクションやパッシブアビリティ、これらのアクションの結果として蓄積または減少するさまざまなAttributeに影響を与えるステータス効果、使用を調整するための「クールダウン」タイマーやリソースコスト、アビリティのレベルやその効果を各レベルで変更する機能、パーティクルやサウンドエフェクトをアクティブ化する機能などを構築できます。簡単に言えば、このシステムは、ジャンプのようなシンプルなアビリティから、現代のRPGやMOBAタイトルにおけるお気に入りのキャラクターのアビリティセットのような複雑なものまで、ゲーム内アビリティを設計、実装、効率的にネットワーク化するのに役立ちます。
 
 GameplayAbilitySystemプラグインはEpic Gamesによって開発され、Unreal Engineに付属しています。このプラグインは、ParagonやFortniteなどのAAA商業ゲームで実際に使用され、実績があります。
 
 このプラグインは、シングルプレイヤーおよびマルチプレイヤーゲームにおいて以下を実現するための即時利用可能なソリューションを提供します:
 * レベルベースのキャラクターアビリティやスキルの実装（コストやクールダウンのオプション付き）([GameplayAbilities](#concepts-ga))
-* アクターに属する数値的な`属性`の操作 ([Attributes](#concepts-a))
+* アクターに属する数値的な`Attribute`の操作 ([Attributes](#concepts-a))
 * アクターへのステータス効果の適用 ([GameplayEffects](#concepts-ge))
 * アクターへの`GameplayTags`の適用 ([GameplayTags](#concepts-gt))
 * 視覚エフェクトやサウンドエフェクトの生成 ([GameplayCues](#concepts-gc))
@@ -190,7 +190,7 @@ GameplayAbilitySystemプラグインはEpic Gamesによって開発され、Unre
 マルチプレイヤーゲームでは、GASは以下の[クライアントサイド予測](#concepts-p)をサポートします:
 * アビリティのアクティベーション
 * アニメーションモンタージュの再生
-* `属性`の変更
+* `Attribute`の変更
 * `GameplayTags`の適用
 * `GameplayCues`の生成
 * `CharacterMovementComponent`に接続された`RootMotionSource`機能を介した移動
@@ -280,8 +280,8 @@ GASを使用するプロジェクトをセットアップする基本手順:
 
 > 4.1 [アビリティシステムコンポーネント](#concepts-asc)  
 > 4.2 [ゲームプレイタグ](#concepts-gt)  
-> 4.3 [属性](#concepts-a)  
-> 4.4 [属性セット](#concepts-as)  
+> 4.3 [Attribute](#concepts-a)  
+> 4.4 [Attribute Set](#concepts-as)  
 > 4.5 [ゲームプレイエフェクト](#concepts-ge)  
 > 4.6 [ゲームプレイアビリティ](#concepts-ga)  
 > 4.7 [アビリティタスク](#concepts-at)  
@@ -291,11 +291,11 @@ GASを使用するプロジェクトをセットアップする基本手順:
 
 <a name="concepts-asc"></a>
 ### 4.1 アビリティシステムコンポーネント
-`アビリティシステムコンポーネント`（`ASC`）はGASの中心です。これは`UActorComponent`（[`UAbilitySystemComponent`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/UAbilitySystemComponent/index.html)）であり、システムとのすべてのやり取りを処理します。[`GameplayAbilities`](#concepts-ga)を使用したり、[`属性`](#concepts-a)を持ったり、[`GameplayEffects`](#concepts-ge)を受け取る`アクター`は、1つの`ASC`をアタッチする必要があります。これらのオブジェクトはすべて`ASC`内に存在し、管理され、レプリケートされます（ただし、`属性`は[`属性セット`](#concepts-as)によってレプリケートされます）。開発者はこれをサブクラス化することが推奨されていますが、必須ではありません。
+`アビリティシステムコンポーネント`（`ASC`）はGASの中心です。これは`UActorComponent`（[`UAbilitySystemComponent`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/UAbilitySystemComponent/index.html)）であり、システムとのすべてのやり取りを処理します。[`GameplayAbilities`](#concepts-ga)を使用したり、[`Attribute`](#concepts-a)を持ったり、[`GameplayEffects`](#concepts-ge)を受け取る`アクター`は、1つの`ASC`をアタッチする必要があります。これらのオブジェクトはすべて`ASC`内に存在し、管理され、レプリケートされます（ただし、`Attribute`は[`Attribute Set`](#concepts-as)によってレプリケートされます）。開発者はこれをサブクラス化することが推奨されていますが、必須ではありません。
 
-`ASC`がアタッチされている`アクター`は、`ASC`の`OwnerActor`と呼ばれます。`ASC`の物理的な表現である`アクター`は`AvatarActor`と呼ばれます。`OwnerActor`と`AvatarActor`は、MOBAゲームの単純なAIミニオンのように同じ`アクター`である場合もあります。また、MOBAゲームのプレイヤーが操作するヒーローのように、`OwnerActor`が`PlayerState`で、`AvatarActor`がヒーローの`Character`クラスである場合もあります。ほとんどの`アクター`は、自身に`ASC`を持ちます。もし`アクター`がリスポーンし、リスポーン間で`属性`や`GameplayEffects`の永続性が必要な場合（MOBAのヒーローのように）、理想的な`ASC`の場所は`PlayerState`です。
+`ASC`がアタッチされている`アクター`は、`ASC`の`OwnerActor`と呼ばれます。`ASC`の物理的な表現である`アクター`は`AvatarActor`と呼ばれます。`OwnerActor`と`AvatarActor`は、MOBAゲームの単純なAIミニオンのように同じ`アクター`である場合もあります。また、MOBAゲームのプレイヤーが操作するヒーローのように、`OwnerActor`が`PlayerState`で、`AvatarActor`がヒーローの`Character`クラスである場合もあります。ほとんどの`アクター`は、自身に`ASC`を持ちます。もし`アクター`がリスポーンし、リスポーン間で`Attribute`や`GameplayEffects`の永続性が必要な場合（MOBAのヒーローのように）、理想的な`ASC`の場所は`PlayerState`です。
 
-**注意:** `ASC`が`PlayerState`にある場合、`PlayerState`の`NetUpdateFrequency`を増やす必要があります。デフォルトでは非常に低い値に設定されており、クライアントで`属性`や`GameplayTags`の変更が遅延またはラグのように見える原因となる可能性があります。[`Adaptive Network Update Frequency`](https://docs.unrealengine.com/en-US/Gameplay/Networking/Actors/Properties/index.html#adaptivenetworkupdatefrequency)を有効にすることを忘れないでください。Fortniteではこれが使用されています。
+**注意:** `ASC`が`PlayerState`にある場合、`PlayerState`の`NetUpdateFrequency`を増やす必要があります。デフォルトでは非常に低い値に設定されており、クライアントで`Attribute`や`GameplayTags`の変更が遅延またはラグのように見える原因となる可能性があります。[`Adaptive Network Update Frequency`](https://docs.unrealengine.com/en-US/Gameplay/Networking/Actors/Properties/index.html#adaptivenetworkupdatefrequency)を有効にすることを忘れないでください。Fortniteではこれが使用されています。
 
 `OwnerActor`と`AvatarActor`の両方が異なる`アクター`である場合、`IAbilitySystemInterface`を実装する必要があります。このインターフェースには1つの関数`UAbilitySystemComponent* GetAbilitySystemComponent() const`があり、`ASC`へのポインタを返します。`ASC`は、このインターフェース関数を探して内部的に相互作用します。
 
@@ -492,41 +492,41 @@ void FCommonConversationRuntimeModule::StartupModule()
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-a"></a>
-### 4.3 属性
+### 4.3 Attribute
 
 <a name="concepts-a-definition"></a>
-#### 4.3.1 属性の定義
-`属性`は、構造体[`FGameplayAttributeData`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/FGameplayAttributeData/index.html)で定義される浮動小数点値です。これらはキャラクターのヘルス量やレベル、ポーションのチャージ数など、ゲームプレイに関連する数値を表すことができます。`属性`は通常、[`GameplayEffects`](#concepts-ge)によってのみ変更されるべきで、これによりASCが変更を[予測](#concepts-p)できるようになります。
+#### 4.3.1 Attributeの定義
+`Attribute`は、構造体[`FGameplayAttributeData`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/FGameplayAttributeData/index.html)で定義される浮動小数点値です。これらはキャラクターのヘルス量やレベル、ポーションのチャージ数など、ゲームプレイに関連する数値を表すことができます。`Attribute`は通常、[`GameplayEffects`](#concepts-ge)によってのみ変更されるべきで、これによりASCが変更を[予測](#concepts-p)できるようになります。
 
-`属性`は[`AttributeSet`](#concepts-as)によって定義され、そこに格納されます。`AttributeSet`は、レプリケーションが必要な`属性`をレプリケートする責任を持ちます。`属性`の定義方法については、[`AttributeSets`](#concepts-as)のセクションを参照してください。
+`Attribute`は[`AttributeSet`](#concepts-as)によって定義され、そこに格納されます。`AttributeSet`は、レプリケーションが必要な`Attribute`をレプリケートする責任を持ちます。`Attribute`の定義方法については、[`AttributeSets`](#concepts-as)のセクションを参照してください。
 
-**ヒント:** `属性`をエディタの`属性`リストに表示させたくない場合、`Meta = (HideInDetailsView)`プロパティ指定子を使用できます。
+**ヒント:** `Attribute`をエディタの`Attribute`リストに表示させたくない場合、`Meta = (HideInDetailsView)`プロパティ指定子を使用できます。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-a-value"></a>
 #### 4.3.2 BaseValueとCurrentValue
-`属性`は、`BaseValue`と`CurrentValue`の2つの値で構成されます。`BaseValue`は`属性`の永続的な値であり、`CurrentValue`は`BaseValue`に`GameplayEffects`による一時的な変更を加えた値です。例えば、キャラクターの移動速度`属性`が600単位/秒の`BaseValue`を持つ場合、まだ`GameplayEffects`による変更がないため、`CurrentValue`も600単位/秒です。もし一時的に50単位/秒の移動速度バフを受けた場合、`BaseValue`は600単位/秒のままですが、`CurrentValue`は600 + 50で合計650単位/秒になります。バフが終了すると、`CurrentValue`は`BaseValue`の600単位/秒に戻ります。
+`Attribute`は、`BaseValue`と`CurrentValue`の2つの値で構成されます。`BaseValue`は`Attribute`の永続的な値であり、`CurrentValue`は`BaseValue`に`GameplayEffects`による一時的な変更を加えた値です。例えば、キャラクターの移動速度`Attribute`が600単位/秒の`BaseValue`を持つ場合、まだ`GameplayEffects`による変更がないため、`CurrentValue`も600単位/秒です。もし一時的に50単位/秒の移動速度バフを受けた場合、`BaseValue`は600単位/秒のままですが、`CurrentValue`は600 + 50で合計650単位/秒になります。バフが終了すると、`CurrentValue`は`BaseValue`の600単位/秒に戻ります。
 
-GAS初心者はしばしば`BaseValue`を`属性`の最大値と混同し、それをそのように扱おうとしますが、これは誤ったアプローチです。変更可能でアビリティやUIで参照される最大値は、別の`属性`として扱うべきです。ハードコードされた最大値と最小値については、`FAttributeMetaData`を使用して`DataTable`を定義する方法がありますが、Epicのコメントによるとこれは「進行中の作業」とされています。詳細は`AttributeSet.h`を参照してください。混乱を避けるため、アビリティやUIで参照される変更可能な最大値は別の`属性`として作成し、`属性`のクランプにのみ使用されるハードコードされた最大値と最小値は`AttributeSet`内のハードコードされた浮動小数点値として定義することをお勧めします。`属性`のクランプについては、`CurrentValue`の変更に対する[PreAttributeChange()](#concepts-as-preattributechange)と、`GameplayEffects`による`BaseValue`の変更に対する[PostGameplayEffectExecute()](#concepts-as-postgameplayeffectexecute)で説明されています。
+GAS初心者はしばしば`BaseValue`を`Attribute`の最大値と混同し、それをそのように扱おうとしますが、これは誤ったアプローチです。変更可能でアビリティやUIで参照される最大値は、別の`Attribute`として扱うべきです。ハードコードされた最大値と最小値については、`FAttributeMetaData`を使用して`DataTable`を定義する方法がありますが、Epicのコメントによるとこれは「進行中の作業」とされています。詳細は`AttributeSet.h`を参照してください。混乱を避けるため、アビリティやUIで参照される変更可能な最大値は別の`Attribute`として作成し、`Attribute`のクランプにのみ使用されるハードコードされた最大値と最小値は`AttributeSet`内のハードコードされた浮動小数点値として定義することをお勧めします。`Attribute`のクランプについては、`CurrentValue`の変更に対する[PreAttributeChange()](#concepts-as-preattributechange)と、`GameplayEffects`による`BaseValue`の変更に対する[PostGameplayEffectExecute()](#concepts-as-postgameplayeffectexecute)で説明されています。
 
 `BaseValue`への永続的な変更は`Instant`型の`GameplayEffects`から発生し、`Duration`型および`Infinite`型の`GameplayEffects`は`CurrentValue`を変更します。`Periodic`型の`GameplayEffects`は`Instant`型の`GameplayEffects`として扱われ、`BaseValue`を変更します。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-a-meta"></a>
-#### 4.3.3 メタ属性
-一部の`属性`は、一時的な値を保持するためのプレースホルダーとして扱われ、他の`属性`と相互作用することを目的としています。これらは`メタ属性`と呼ばれます。例えば、ダメージを`メタ属性`として定義することが一般的です。`GameplayEffect`が直接ヘルス`属性`を変更するのではなく、ダメージという`メタ属性`をプレースホルダーとして使用します。この方法では、ダメージ値をバフやデバフで修正し、[`GameplayEffectExecutionCalculation`](#concepts-ge-ec)内でさらに操作できます。例えば、現在のシールド`属性`からダメージを差し引き、残りをヘルス`属性`から差し引くことができます。ダメージ`メタ属性`は`GameplayEffects`間で永続性を持たず、毎回上書きされます。`メタ属性`は通常レプリケートされません。
+#### 4.3.3 Meta Attribute
+一部の`Attribute`は、一時的な値を保持するためのプレースホルダーとして扱われ、他の`Attribute`と相互作用することを目的としています。これらは`Meta Attribute`と呼ばれます。例えば、ダメージを`Meta Attribute`として定義することが一般的です。`GameplayEffect`が直接ヘルス`Attribute`を変更するのではなく、ダメージという`Meta Attribute`をプレースホルダーとして使用します。この方法では、ダメージ値をバフやデバフで修正し、[`GameplayEffectExecutionCalculation`](#concepts-ge-ec)内でさらに操作できます。例えば、現在のシールド`Attribute`からダメージを差し引き、残りをヘルス`Attribute`から差し引くことができます。ダメージ`Meta Attribute`は`GameplayEffects`間で永続性を持たず、毎回上書きされます。`Meta Attribute`は通常レプリケートされません。
 
-`メタ属性`は、ダメージや回復のようなものに対して「どれだけのダメージを与えたか」と「そのダメージをどう処理するか」を分離するための良い論理的な区分を提供します。この論理的な分離により、`GameplayEffects`や`Execution Calculations`がターゲットがダメージをどのように処理するかを知る必要がなくなります。ダメージの例を続けると、`GameplayEffect`がダメージ量を決定し、`AttributeSet`がそのダメージをどう処理するかを決定します。すべてのキャラクターが同じ`属性`を持つわけではないため、特に`AttributeSets`をサブクラス化している場合、この分離は重要です。基本の`AttributeSet`クラスにはヘルス`属性`しかないかもしれませんが、サブクラス化された`AttributeSet`にはシールド`属性`が追加されるかもしれません。シールド`属性`を持つサブクラス化された`AttributeSet`は、受け取ったダメージを基本の`AttributeSet`クラスとは異なる方法で分配します。
+`Meta Attribute`は、ダメージや回復のようなものに対して「どれだけのダメージを与えたか」と「そのダメージをどう処理するか」を分離するための良い論理的な区分を提供します。この論理的な分離により、`GameplayEffects`や`Execution Calculations`がターゲットがダメージをどのように処理するかを知る必要がなくなります。ダメージの例を続けると、`GameplayEffect`がダメージ量を決定し、`AttributeSet`がそのダメージをどう処理するかを決定します。すべてのキャラクターが同じ`Attribute`を持つわけではないため、特に`AttributeSets`をサブクラス化している場合、この分離は重要です。基本の`AttributeSet`クラスにはヘルス`Attribute`しかないかもしれませんが、サブクラス化された`AttributeSet`にはシールド`Attribute`が追加されるかもしれません。シールド`Attribute`を持つサブクラス化された`AttributeSet`は、受け取ったダメージを基本の`AttributeSet`クラスとは異なる方法で分配します。
 
-`メタ属性`は良い設計パターンですが、必須ではありません。すべてのダメージインスタンスに対して1つの`Execution Calculation`を使用し、すべてのキャラクターが共有する1つの`AttributeSet`クラスを使用する場合、`Execution Calculation`内でヘルスやシールドなどにダメージを直接分配して`属性`を直接変更する方法でも問題ありません。この場合、柔軟性を犠牲にすることになりますが、それが許容範囲であれば問題ありません。
+`Meta Attribute`は良い設計パターンですが、必須ではありません。すべてのダメージインスタンスに対して1つの`Execution Calculation`を使用し、すべてのキャラクターが共有する1つの`AttributeSet`クラスを使用する場合、`Execution Calculation`内でヘルスやシールドなどにダメージを直接分配して`Attribute`を直接変更する方法でも問題ありません。この場合、柔軟性を犠牲にすることになりますが、それが許容範囲であれば問題ありません。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-a-changes"></a>
-#### 4.3.4 属性の変更に応答する
-UIの更新や他のゲームプレイのために`属性`が変更されたときにリッスンするには、`UAbilitySystemComponent::GetGameplayAttributeValueChangeDelegate(FGameplayAttribute Attribute)`を使用します。この関数はデリゲートを返し、`属性`が変更されるたびに自動的に呼び出されます。デリゲートは`FOnAttributeChangeData`パラメータを提供し、`NewValue`、`OldValue`、および`FGameplayEffectModCallbackData`を含みます。**注意:** `FGameplayEffectModCallbackData`はサーバーでのみ設定されます。
+#### 4.3.4 Attributeの変更に応答する
+UIの更新や他のゲームプレイのために`Attribute`が変更されたときにリッスンするには、`UAbilitySystemComponent::GetGameplayAttributeValueChangeDelegate(FGameplayAttribute Attribute)`を使用します。この関数はデリゲートを返し、`Attribute`が変更されるたびに自動的に呼び出されます。デリゲートは`FOnAttributeChangeData`パラメータを提供し、`NewValue`、`OldValue`、および`FGameplayEffectModCallbackData`を含みます。**注意:** `FGameplayEffectModCallbackData`はサーバーでのみ設定されます。
 
 ```c++
 AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthAttribute()).AddUObject(this, &AGDPlayerState::HealthChanged);
@@ -536,62 +536,62 @@ AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase
 virtual void HealthChanged(const FOnAttributeChangeData& Data);
 ```
 
-サンプルプロジェクトでは、`GDPlayerState`で`属性`値変更デリゲートにバインドしてHUDを更新し、ヘルスがゼロになったときにプレイヤーの死亡に応答します。
+サンプルプロジェクトでは、`GDPlayerState`で`Attribute`値変更デリゲートにバインドしてHUDを更新し、ヘルスがゼロになったときにプレイヤーの死亡に応答します。
 
 この処理を`ASyncTask`にラップしたカスタムBlueprintノードがサンプルプロジェクトに含まれています。これは`UI_HUD`のUMGウィジェットでヘルス、マナ、スタミナの値を更新するために使用されています。この`AsyncTask`は手動で`EndTask()`を呼び出すまで永続します。UMGウィジェットの`Destruct`イベントでこれを行います。詳細は`AsyncTaskAttributeChanged.h/cpp`を参照してください。
 
-![属性変更をリッスンするBPノード](https://github.com/tranek/GASDocumentation/raw/master/Images/attributechange.png)
+![Attribute変更をリッスンするBPノード](https://github.com/tranek/GASDocumentation/raw/master/Images/attributechange.png)
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-a-derived"></a>
-#### 4.3.5 派生属性
-1つまたは複数の他の`属性`から値の一部または全部が派生する`属性`を作成するには、1つ以上の`属性ベース`または[`MMC`](#concepts-ge-mmc) [`修飾子`](#concepts-ge-mods)を持つ`無限`型の`GameplayEffect`を使用します。`派生属性`は、それに依存する`属性`が更新されるたびに自動的に更新されます。
+#### 4.3.5 Derived Attribute
+1つまたは複数の他の`Attribute`から値の一部または全部が派生する`Attribute`を作成するには、1つ以上の`Attribute Base`または[`MMC`](#concepts-ge-mmc) [`Derived`](#concepts-ge-mods)を持つ`Infinite`型の`GameplayEffect`を使用します。`Derived Attribute`は、それに依存する`Attribute`が更新されるたびに自動的に更新されます。
 
-`派生属性`のすべての`修飾子`に対する最終的な計算式は、`修飾子アグリゲーター`の計算式と同じです。特定の順序で計算を行う必要がある場合は、すべてを`MMC`内で行います。
+`Derived Attribute`のすべての`Derived`に対する最終的な計算式は、`Modifier Aggregators`の計算式と同じです。特定の順序で計算を行う必要がある場合は、すべてを`MMC`内で行います。
 
 ```
 ((CurrentValue + Additive) * Multiplicative) / Division
 ```
 
-**注意:** PIEで複数のクライアントを使用する場合、エディタ設定で`Run Under One Process`を無効にする必要があります。そうしないと、最初のクライアント以外で独立した`属性`が更新されても`派生属性`が更新されません。
+**注意:** PIEで複数のクライアントを使用する場合、エディタ設定で`Run Under One Process`を無効にする必要があります。そうしないと、最初のクライアント以外で独立した`Attribute`が更新されても`Derived Attribute`が更新されません。
 
-この例では、`無限`型の`GameplayEffect`を使用して、`TestAttrA`の値を`TestAttrB`と`TestAttrC`という`属性`から`TestAttrA = (TestAttrA + TestAttrB) * (2 * TestAttrC)`という式で派生させています。`TestAttrA`は、これらの`属性`が値を更新するたびに自動的に再計算されます。
+この例では、`Infinite`型の`GameplayEffect`を使用して、`TestAttrA`の値を`TestAttrB`と`TestAttrC`という`Attribute`から`TestAttrA = (TestAttrA + TestAttrB) * (2 * TestAttrC)`という式で派生させています。`TestAttrA`は、これらの`Attribute`が値を更新するたびに自動的に再計算されます。
 
-![派生属性の例](https://github.com/tranek/GASDocumentation/raw/master/Images/derivedattribute.png)
+![Derived Attributeの例](https://github.com/tranek/GASDocumentation/raw/master/Images/derivedattribute.png)
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-as"></a>
-### 4.4 属性セット
+### 4.4 Attribute Set
 
 <a name="concepts-as-definition"></a>
-#### 4.4.1 属性セットの定義
-`属性セット`は、`属性`を定義し、保持し、変更を管理します。開発者は[`UAttributeSet`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/UAttributeSet/index.html)からサブクラス化する必要があります。`OwnerActor`のコンストラクタ内で`属性セット`を作成すると、自動的にその`ASC`に登録されます。**これはC++で行う必要があります**。
+#### 4.4.1 Attribute Setの定義
+`Attribute Set`は、`Attribute`を定義し、保持し、変更を管理します。開発者は[`UAttributeSet`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/UAttributeSet/index.html)からサブクラス化する必要があります。`OwnerActor`のコンストラクタ内で`Attribute Set`を作成すると、自動的にその`ASC`に登録されます。**これはC++で行う必要があります**。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-as-design"></a>
-#### 4.4.2 属性セットの設計
-`ASC`には1つまたは複数の`属性セット`を持たせることができます。`属性セット`はメモリのオーバーヘッドがほとんどないため、いくつの`属性セット`を使用するかは開発者の判断に委ねられます。
+#### 4.4.2 Attribute Setの設計
+`ASC`には1つまたは複数の`Attribute Set`を持たせることができます。`Attribute Set`はメモリのオーバーヘッドがほとんどないため、いくつの`Attribute Set`を使用するかは開発者の判断に委ねられます。
 
-すべての`アクター`で共有される1つの大きなモノリシックな`属性セット`を使用し、必要に応じて`属性`を使用し、未使用の`属性`は無視する方法も許容されます。
+すべての`アクター`で共有される1つの大きなモノリシックな`Attribute Set`を使用し、必要に応じて`Attribute`を使用し、未使用の`Attribute`は無視する方法も許容されます。
 
-また、`属性`をグループ化した複数の`属性セット`を作成し、必要に応じて`アクター`に選択的に追加する方法もあります。例えば、ヘルス関連の`属性`用の`属性セット`、マナ関連の`属性`用の`属性セット`などを作成できます。MOBAゲームでは、ヒーローはマナが必要ですが、ミニオンは必要ない場合があります。そのため、ヒーローにはマナの`属性セット`を追加し、ミニオンには追加しないという選択が可能です。
+また、`Attribute`をグループ化した複数の`Attribute Set`を作成し、必要に応じて`アクター`に選択的に追加する方法もあります。例えば、ヘルス関連の`Attribute`用の`Attribute Set`、マナ関連の`Attribute`用の`Attribute Set`などを作成できます。MOBAゲームでは、ヒーローはマナが必要ですが、ミニオンは必要ない場合があります。そのため、ヒーローにはマナの`Attribute Set`を追加し、ミニオンには追加しないという選択が可能です。
 
-さらに、`属性セット`をサブクラス化することで、`アクター`が持つ`属性`を選択的に決定することもできます。`属性`は内部的に`AttributeSetClassName.AttributeName`として参照されます。`属性セット`をサブクラス化すると、親クラスのすべての`属性`は引き続き親クラスの名前をプレフィックスとして持ちます。
+さらに、`Attribute Set`をサブクラス化することで、`アクター`が持つ`Attribute`を選択的に決定することもできます。`Attribute`は内部的に`AttributeSetClassName.AttributeName`として参照されます。`Attribute Set`をサブクラス化すると、親クラスのすべての`Attribute`は引き続き親クラスの名前をプレフィックスとして持ちます。
 
-複数の`属性セット`を持つことは可能ですが、同じクラスの`属性セット`を1つの`ASC`に複数持たせるべきではありません。同じクラスの`属性セット`が複数ある場合、どの`属性セット`を使用するかが不明確になり、1つだけが選択されます。
+複数の`Attribute Set`を持つことは可能ですが、同じクラスの`Attribute Set`を1つの`ASC`に複数持たせるべきではありません。同じクラスの`Attribute Set`が複数ある場合、どの`Attribute Set`を使用するかが不明確になり、1つだけが選択されます。
 
 <a name="concepts-as-design-subcomponents"></a>
-##### 4.4.2.1 個別の属性を持つサブコンポーネント
-`Pawn`に複数のダメージ可能なコンポーネント（個別にダメージを受けるアーマーピースなど）がある場合、`Pawn`が持つ最大数のダメージ可能なコンポーネントを想定して、それに対応する数のヘルス`属性`を1つの`属性セット`に作成することをお勧めします。例えば、DamageableCompHealth0、DamageableCompHealth1などのように、これらのコンポーネントを論理的な「スロット」として表現します。ダメージ可能なコンポーネントクラスのインスタンスでは、どのスロット番号の`属性`を使用するかを割り当て、`GameplayAbilities`や[`Execution`](#concepts-ge-ec)でどの`属性`にダメージを適用するかを判断できるようにします。`Pawn`が最大数より少ない、またはゼロのダメージ可能なコンポーネントを持つ場合でも問題ありません。`属性セット`に`属性`が含まれていても、使用しない限りメモリへの影響はほとんどありません。
+##### 4.4.2.1 個別のAttributeを持つサブコンポーネント
+`Pawn`に複数のダメージ可能なコンポーネント（個別にダメージを受けるアーマーピースなど）がある場合、`Pawn`が持つ最大数のダメージ可能なコンポーネントを想定して、それに対応する数のヘルス`Attribute`を1つの`Attribute Set`に作成することをお勧めします。例えば、DamageableCompHealth0、DamageableCompHealth1などのように、これらのコンポーネントを論理的な「スロット」として表現します。ダメージ可能なコンポーネントクラスのインスタンスでは、どのスロット番号の`Attribute`を使用するかを割り当て、`GameplayAbilities`や[`Execution`](#concepts-ge-ec)でどの`Attribute`にダメージを適用するかを判断できるようにします。`Pawn`が最大数より少ない、またはゼロのダメージ可能なコンポーネントを持つ場合でも問題ありません。`Attribute Set`に`Attribute`が含まれていても、使用しない限りメモリへの影響はほとんどありません。
 
-サブコンポーネントが多くの`属性`を必要とする場合や、サブコンポーネントの数が無制限である場合、またはサブコンポーネントがデタッチされて他のプレイヤーに使用される可能性がある場合（例: 武器）、このアプローチが適さない場合は、`属性`の代わりに通常の浮動小数点値をコンポーネントに格納する方法を検討してください。[アイテム属性](#concepts-as-design-itemattributes)を参照してください。
+サブコンポーネントが多くの`Attribute`を必要とする場合や、サブコンポーネントの数が無制限である場合、またはサブコンポーネントがデタッチされて他のプレイヤーに使用される可能性がある場合（例: 武器）、このアプローチが適さない場合は、`Attribute`の代わりに通常の浮動小数点値をコンポーネントに格納する方法を検討してください。[アイテムAttribute](#concepts-as-design-itemattributes)を参照してください。
 
 <a name="concepts-as-design-addremoveruntime"></a>
-##### 4.4.2.2 実行時に属性セットを追加・削除する
-`属性セット`は実行時に`ASC`に追加および削除することができます。ただし、`属性セット`の削除は危険を伴います。例えば、クライアントで`属性セット`がサーバーよりも先に削除され、`属性`値の変更がクライアントにレプリケートされると、`属性`がその`属性セット`を見つけられず、ゲームがクラッシュする可能性があります。
+##### 4.4.2.2 実行時にAttribute Setを追加・削除する
+`Attribute Set`は実行時に`ASC`に追加および削除することができます。ただし、`Attribute Set`の削除は危険を伴います。例えば、クライアントで`Attribute Set`がサーバーよりも先に削除され、`Attribute`値の変更がクライアントにレプリケートされると、`Attribute`がその`Attribute Set`を見つけられず、ゲームがクラッシュする可能性があります。
 
 インベントリに武器を追加する際のコード例:
 ```c++
@@ -606,16 +606,16 @@ AbilitySystemComponent->ForceReplication();
 ```
 
 <a name="concepts-as-design-itemattributes"></a>
-##### 4.4.2.3 アイテム属性（武器の弾薬）
-装備可能なアイテムに`属性`（武器の弾薬、アーマーの耐久性など）を実装する方法はいくつかあります。これらのアプローチはすべて、値をアイテムに直接格納します。これは、アイテムがそのライフサイクル中に複数のプレイヤーに装備される可能性がある場合に必要です。
+##### 4.4.2.3 アイテムAttribute（武器の弾薬）
+装備可能なアイテムに`Attribute`（武器の弾薬、アーマーの耐久性など）を実装する方法はいくつかあります。これらのアプローチはすべて、値をアイテムに直接格納します。これは、アイテムがそのライフサイクル中に複数のプレイヤーに装備される可能性がある場合に必要です。
 
 > 1. アイテムに通常の浮動小数点値を使用する（**推奨**）
-> 2. アイテムに個別の`属性セット`を使用する
+> 2. アイテムに個別の`Attribute Set`を使用する
 > 3. アイテムに個別の`ASC`を使用する
 
 <a name="concepts-as-design-itemattributes-plainfloats"></a>
 ###### 4.4.2.3.1 アイテムに通常の浮動小数点値を使用する
-`属性`の代わりに、アイテムクラスのインスタンスに通常の浮動小数点値を格納します。Fortniteや[GASShooter](https://github.com/tranek/GASShooter)では、武器の弾薬をこの方法で管理しています。例えば、武器には最大クリップサイズ、現在のクリップ内の弾薬、予備弾薬などを直接レプリケートされた浮動小数点値（`COND_OwnerOnly`）として格納します。武器が予備弾薬を共有する場合、予備弾薬をキャラクターの共有弾薬`属性セット`の`属性`として移動します（リロードアビリティは`Cost GE`を使用して予備弾薬から武器のクリップ弾薬に移動できます）。現在のクリップ弾薬に`属性`を使用しないため、`UGameplayAbility`のいくつかの関数をオーバーライドして、武器の浮動小数点値に対してコストをチェックおよび適用する必要があります。アビリティを付与する際に[`GameplayAbilitySpec`](https://github.com/tranek/GASDocumentation#concepts-ga-spec)の`SourceObject`として武器を設定すると、アビリティ内でその武器にアクセスできます。
+`Attribute`の代わりに、アイテムクラスのインスタンスに通常の浮動小数点値を格納します。Fortniteや[GASShooter](https://github.com/tranek/GASShooter)では、武器の弾薬をこの方法で管理しています。例えば、武器には最大クリップサイズ、現在のクリップ内の弾薬、予備弾薬などを直接レプリケートされた浮動小数点値（`COND_OwnerOnly`）として格納します。武器が予備弾薬を共有する場合、予備弾薬をキャラクターの共有弾薬`Attribute Set`の`Attribute`として移動します（リロードアビリティは`Cost GE`を使用して予備弾薬から武器のクリップ弾薬に移動できます）。現在のクリップ弾薬に`Attribute`を使用しないため、`UGameplayAbility`のいくつかの関数をオーバーライドして、武器の浮動小数点値に対してコストをチェックおよび適用する必要があります。アビリティを付与する際に[`GameplayAbilitySpec`](https://github.com/tranek/GASDocumentation#concepts-ga-spec)の`SourceObject`として武器を設定すると、アビリティ内でその武器にアクセスできます。
 
 自動射撃中に弾薬量がレプリケートされてローカルの弾薬量を上書きしないようにするため、`PreReplication()`でプレイヤーが`IsFiring`の`GameplayTag`を持っている間はレプリケーションを無効にします。この方法では、独自のローカル予測を行っています。
 
@@ -630,7 +630,7 @@ void AGSWeapon::PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracke
 ```
 
 **利点:**
-1. `属性セット`を使用する際の制約を回避できる（以下参照）
+1. `Attribute Set`を使用する際の制約を回避できる（以下参照）
 
 **制約:**
 1. 既存の`GameplayEffect`ワークフロー（弾薬使用の`Cost GE`など）を使用できない
@@ -655,7 +655,7 @@ void AGSWeapon::PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracke
 
 <a name="concepts-as-design-itemattributes-attributeset"></a>
 ###### 4.4.2.3.2 アイテムに`AttributeSet`を使用する
-アイテムに個別の`AttributeSet`を使用し、それを[プレイヤーの`ASC`に追加する](#concepts-as-design-addremoveruntime)方法は機能しますが、いくつかの大きな制約があります。これは[GASShooter](https://github.com/tranek/GASShooter)の初期バージョンで武器の弾薬管理に使用されていました。武器は、最大クリップサイズ、現在のクリップ内の弾薬、予備弾薬などの`属性`を武器クラスに属する`AttributeSet`に格納します。武器が予備弾薬を共有する場合、予備弾薬をキャラクターの共有弾薬`AttributeSet`に移動します。サーバーで武器がプレイヤーのインベントリに追加されると、武器はその`AttributeSet`をプレイヤーの`ASC::SpawnedAttributes`に追加します。その後、サーバーはこれをクライアントにレプリケートします。武器がインベントリから削除されると、その`AttributeSet`も`ASC::SpawnedAttributes`から削除されます。
+アイテムに個別の`AttributeSet`を使用し、それを[プレイヤーの`ASC`に追加する](#concepts-as-design-addremoveruntime)方法は機能しますが、いくつかの大きな制約があります。これは[GASShooter](https://github.com/tranek/GASShooter)の初期バージョンで武器の弾薬管理に使用されていました。武器は、最大クリップサイズ、現在のクリップ内の弾薬、予備弾薬などの`Attribute`を武器クラスに属する`AttributeSet`に格納します。武器が予備弾薬を共有する場合、予備弾薬をキャラクターの共有弾薬`AttributeSet`に移動します。サーバーで武器がプレイヤーのインベントリに追加されると、武器はその`AttributeSet`をプレイヤーの`ASC::SpawnedAttributes`に追加します。その後、サーバーはこれをクライアントにレプリケートします。武器がインベントリから削除されると、その`AttributeSet`も`ASC::SpawnedAttributes`から削除されます。
 
 `AttributeSet`が`OwnerActor`以外の場所（例えば武器）に存在する場合、`AttributeSet`でいくつかのコンパイルエラーが発生することがあります。この問題を解決するには、`AttributeSet`をコンストラクタではなく`BeginPlay()`で構築し、武器に`IAbilitySystemInterface`を実装して（武器をプレイヤーのインベントリに追加する際に`ASC`へのポインタを設定）、エラーを回避します。
 
@@ -689,7 +689,7 @@ void AGSWeapon::BeginPlay()
 > 
 > 最初の問題は、所有するアクターに`IGameplayTagAssetInterface`と`IAbilitySystemInterface`を実装することです。前者は可能かもしれません: すべての`ASC`からタグを集約する（ただし注意が必要です - `HasAllMatchingGameplayTags`はクロスASC集約によってのみ満たされる可能性があります。各ASCへの呼び出しを転送して結果をORするだけでは不十分です）。しかし、後者はさらに難しいです: どのASCが権限を持つものと見なされるべきでしょうか？誰かがGEを適用したい場合、どのASCがそれを受け取るべきでしょうか？これらの問題を解決できるかもしれませんが、この側面が最も難しい部分になるでしょう: 所有者が複数のASCを持つことになります。
 > 
-> ポーンと武器に別々のASCを持たせること自体は理にかなっています。例えば、武器を説明するタグと所有するポーンを説明するタグを区別することができます。武器に付与されたタグが所有者にも「適用」されるが、それ以外には適用されない（例: 属性やGEは独立しているが、所有者は所有するタグを集約する）というのは理にかなっているかもしれません。これが機能する可能性は十分にあります。しかし、同じ所有者を持つ複数のASCを持つことはやや危険です。
+> ポーンと武器に別々のASCを持たせること自体は理にかなっています。例えば、武器を説明するタグと所有するポーンを説明するタグを区別することができます。武器に付与されたタグが所有者にも「適用」されるが、それ以外には適用されない（例: AttributeやGEは独立しているが、所有者は所有するタグを集約する）というのは理にかなっているかもしれません。これが機能する可能性は十分にあります。しかし、同じ所有者を持つ複数のASCを持つことはやや危険です。
 
 *EpicのDave Rattiによる[コミュニティ質問#6](https://epicgames.ent.box.com/s/m1egifkxv3he3u3xezb9hzbgroxyhx89)への回答*
 
@@ -704,8 +704,8 @@ void AGSWeapon::BeginPlay()
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-as-attributes"></a>
-#### 4.4.3 属性の定義
-**`属性`はC++でのみ定義可能**であり、`AttributeSet`のヘッダーファイル内で定義します。以下のマクロブロックをすべての`AttributeSet`ヘッダーファイルの先頭に追加することを推奨します。このマクロは、`属性`のためのゲッターおよびセッター関数を自動的に生成します。
+#### 4.4.3 Attributeの定義
+**`Attribute`はC++でのみ定義可能**であり、`AttributeSet`のヘッダーファイル内で定義します。以下のマクロブロックをすべての`AttributeSet`ヘッダーファイルの先頭に追加することを推奨します。このマクロは、`Attribute`のためのゲッターおよびセッター関数を自動的に生成します。
 
 ```c++
 // AttributeSet.hからのマクロを使用
@@ -716,7 +716,7 @@ void AGSWeapon::BeginPlay()
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 ```
 
-レプリケーションされるヘルス属性は以下のように定義します:
+レプリケーションされるヘルスAttributeは以下のように定義します:
 
 ```c++
 UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health)
@@ -738,7 +738,7 @@ void UGDAttributeSetBase::OnRep_Health(const FGameplayAttributeData& OldHealth)
 }
 ```
 
-最後に、`属性`を`GetLifetimeReplicatedProps`に追加します:
+最後に、`Attribute`を`GetLifetimeReplicatedProps`に追加します:
 ```c++
 void UGDAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -750,32 +750,32 @@ void UGDAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 `REPNOTIFY_Always`は、ローカル値がサーバーからレプリケートされた値とすでに等しい場合でも`OnRep`関数をトリガーするように指示します（予測のため）。デフォルトでは、ローカル値がサーバーからレプリケートされた値と同じ場合、`OnRep`関数はトリガーされません。
 
-もし`属性`が`Meta Attribute`のようにレプリケートされない場合、`OnRep`および`GetLifetimeReplicatedProps`の手順をスキップできます。
+もし`Attribute`が`Meta Attribute`のようにレプリケートされない場合、`OnRep`および`GetLifetimeReplicatedProps`の手順をスキップできます。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-as-init"></a>
-#### 4.4.4 属性の初期化
-`属性`（`BaseValue`およびそれに伴う`CurrentValue`）を初期化する方法はいくつかあります。Epicはインスタント型の`GameplayEffect`を使用することを推奨しています。この方法はサンプルプロジェクトでも使用されています。
+#### 4.4.4 Attributeの初期化
+`Attribute`（`BaseValue`およびそれに伴う`CurrentValue`）を初期化する方法はいくつかあります。Epicはインスタント型の`GameplayEffect`を使用することを推奨しています。この方法はサンプルプロジェクトでも使用されています。
 
-サンプルプロジェクトの`GE_HeroAttributes` Blueprintを参照すると、`属性`を初期化するためのインスタント型`GameplayEffect`の作成方法がわかります。この`GameplayEffect`の適用はC++で行われます。
+サンプルプロジェクトの`GE_HeroAttributes` Blueprintを参照すると、`Attribute`を初期化するためのインスタント型`GameplayEffect`の作成方法がわかります。この`GameplayEffect`の適用はC++で行われます。
 
-もし`ATTRIBUTE_ACCESSORS`マクロを使用して`属性`を定義している場合、各`属性`に対して自動的に初期化関数が生成されます。この関数をC++内で任意のタイミングで呼び出すことができます。
+もし`ATTRIBUTE_ACCESSORS`マクロを使用して`Attribute`を定義している場合、各`Attribute`に対して自動的に初期化関数が生成されます。この関数をC++内で任意のタイミングで呼び出すことができます。
 
 ```c++
-// `ATTRIBUTE_ACCESSORS`マクロで定義された`Health`属性に対して自動生成された初期化関数
+// `ATTRIBUTE_ACCESSORS`マクロで定義された`Health`Attributeに対して自動生成された初期化関数
 AttributeSet->InitHealth(100.0f);
 ```
 
-`AttributeSet.h`には、他の`属性`を初期化する方法も記載されています。
+`AttributeSet.h`には、他の`Attribute`を初期化する方法も記載されています。
 
-**注意:** バージョン4.24以前では、`FAttributeSetInitterDiscreteLevels`は`FGameplayAttributeData`と互換性がありませんでした。この仕組みは、`属性`が単なる浮動小数点値だった時代に作られたもので、`FGameplayAttributeData`が`Plain Old Data`（`POD`）ではないとエラーが発生します。この問題はバージョン4.24で修正されています（https://issues.unrealengine.com/issue/UE-76557）。
+**注意:** バージョン4.24以前では、`FAttributeSetInitterDiscreteLevels`は`FGameplayAttributeData`と互換性がありませんでした。この仕組みは、`Attribute`が単なる浮動小数点値だった時代に作られたもので、`FGameplayAttributeData`が`Plain Old Data`（`POD`）ではないとエラーが発生します。この問題はバージョン4.24で修正されています（https://issues.unrealengine.com/issue/UE-76557）。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-as-preattributechange"></a>
 #### 4.4.5 PreAttributeChange()
-`PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)`は、`AttributeSet`内で`属性`の`CurrentValue`が変更される前に呼び出される主要な関数の1つです。この関数は、参照パラメータ`NewValue`を使用して`CurrentValue`の変更をクランプ（制限）するのに最適な場所です。
+`PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)`は、`AttributeSet`内で`Attribute`の`CurrentValue`が変更される前に呼び出される主要な関数の1つです。この関数は、参照パラメータ`NewValue`を使用して`CurrentValue`の変更をクランプ（制限）するのに最適な場所です。
 
 例えば、移動速度の修正値をクランプする場合、サンプルプロジェクトでは以下のように実装されています:
 ```c++
@@ -785,25 +785,25 @@ if (Attribute == GetMoveSpeedAttribute())
 	NewValue = FMath::Clamp<float>(NewValue, 150, 1000);
 }
 ```
-`GetMoveSpeedAttribute()`関数は、`AttributeSet.h`に追加したマクロブロックによって生成されます（[属性の定義](#concepts-as-attributes)を参照）。
+`GetMoveSpeedAttribute()`関数は、`AttributeSet.h`に追加したマクロブロックによって生成されます（[Attributeの定義](#concepts-as-attributes)を参照）。
 
-この関数は、`属性`の変更が`Attribute`セッター（`AttributeSet.h`のマクロブロックで定義）や[`GameplayEffects`](#concepts-ge)を使用して行われる場合にトリガーされます。
+この関数は、`Attribute`の変更が`Attribute`セッター（`AttributeSet.h`のマクロブロックで定義）や[`GameplayEffects`](#concepts-ge)を使用して行われる場合にトリガーされます。
 
 **注意:** この関数内で行われるクランプ処理は、`ASC`上の修飾子を永続的に変更するものではありません。クランプ処理は、修飾子をクエリした際に返される値にのみ影響します。そのため、[`GameplayEffectExecutionCalculations`](#concepts-ge-ec)や[`ModifierMagnitudeCalculations`](#concepts-ge-mmc)など、`CurrentValue`を再計算する処理では、再度クランプ処理を実装する必要があります。
 
-**注意:** Epicのコメントによると、`PreAttributeChange()`はゲームプレイイベントには使用せず、主にクランプ処理に使用することが推奨されています。`属性`の変更に対するゲームプレイイベントは、`UAbilitySystemComponent::GetGameplayAttributeValueChangeDelegate(FGameplayAttribute Attribute)`（[属性変更への応答](#concepts-a-changes)）を使用することが推奨されています。
+**注意:** Epicのコメントによると、`PreAttributeChange()`はゲームプレイイベントには使用せず、主にクランプ処理に使用することが推奨されています。`Attribute`の変更に対するゲームプレイイベントは、`UAbilitySystemComponent::GetGameplayAttributeValueChangeDelegate(FGameplayAttribute Attribute)`（[Attribute変更への応答](#concepts-a-changes)）を使用することが推奨されています。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="concepts-as-postgameplayeffectexecute"></a>
 #### 4.4.6 PostGameplayEffectExecute()
-`PostGameplayEffectExecute(const FGameplayEffectModCallbackData & Data)`は、インスタント型[`GameplayEffect`](#concepts-ge)による`属性`の`BaseValue`の変更後にのみトリガーされます。この関数は、`GameplayEffect`による`属性`の変更後にさらなる操作を行うのに適した場所です。
+`PostGameplayEffectExecute(const FGameplayEffectModCallbackData & Data)`は、インスタント型[`GameplayEffect`](#concepts-ge)による`Attribute`の`BaseValue`の変更後にのみトリガーされます。この関数は、`GameplayEffect`による`Attribute`の変更後にさらなる操作を行うのに適した場所です。
 
-例えば、サンプルプロジェクトでは、最終的なダメージ`メタ属性`をヘルス`属性`から差し引く処理をここで行っています。もしシールド`属性`が存在する場合、ダメージをまずシールドから差し引き、残りをヘルスから差し引くことができます。また、サンプルプロジェクトでは、この関数を使用してヒットリアクションアニメーションの適用、ダメージ数値の表示、キラーへの経験値やゴールド報酬の割り当てを行っています。設計上、ダメージ`メタ属性`は常にインスタント型`GameplayEffect`を通じて処理され、`属性`セッターを使用することはありません。
+例えば、サンプルプロジェクトでは、最終的なダメージ`Meta Attribute`をヘルス`Attribute`から差し引く処理をここで行っています。もしシールド`Attribute`が存在する場合、ダメージをまずシールドから差し引き、残りをヘルスから差し引くことができます。また、サンプルプロジェクトでは、この関数を使用してヒットリアクションアニメーションの適用、ダメージ数値の表示、キラーへの経験値やゴールド報酬の割り当てを行っています。設計上、ダメージ`Meta Attribute`は常にインスタント型`GameplayEffect`を通じて処理され、`Attribute`セッターを使用することはありません。
 
-また、マナやスタミナのようにインスタント型`GameplayEffect`によってのみ`BaseValue`が変更される`属性`についても、ここで最大値に対応する`属性`にクランプすることができます。
+また、マナやスタミナのようにインスタント型`GameplayEffect`によってのみ`BaseValue`が変更される`Attribute`についても、ここで最大値に対応する`Attribute`にクランプすることができます。
 
-**注意:** `PostGameplayEffectExecute()`が呼び出された時点で、`属性`の変更はすでに行われていますが、まだクライアントにレプリケートされていません。そのため、ここで値をクランプしても、クライアントへのネットワーク更新が2回発生することはありません。クライアントはクランプ後の値のみを受け取ります。
+**注意:** `PostGameplayEffectExecute()`が呼び出された時点で、`Attribute`の変更はすでに行われていますが、まだクライアントにレプリケートされていません。そのため、ここで値をクランプしても、クライアントへのネットワーク更新が2回発生することはありません。クライアントはクランプ後の値のみを受け取ります。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
@@ -948,7 +948,7 @@ virtual void OnRemoveGameplayEffectCallback(const FActiveGameplayEffect& EffectR
 
 <a name="concepts-ge-mods-multiplydivide"></a>
 ##### 4.5.4.1 MultiplyとDivideの修飾子
-デフォルトでは、すべての`Multiply`および`Divide`の`修飾子`は、`属性`の`BaseValue`に乗算または除算される前に加算されます。
+デフォルトでは、すべての`Multiply`および`Divide`の`Derived`は、`Attribute`の`BaseValue`に乗算または除算される前に加算されます。
 
 ```c++
 float FAggregatorModChannel::EvaluateWithBase(float InlineBaseValue, const FAggregatorEvaluateParameters& Parameters) const
@@ -1048,7 +1048,7 @@ float FAggregatorModChannel::MultiplyMods(const TArray<FAggregatorMod>& InMods, 
 
 各[修飾子](#concepts-ge-mods)に対して`SourceTags`と`TargetTags`を設定できます。これらは`GameplayEffect`の[`Application Tag requirements`](#concepts-ge-tags)と同様に機能します。そのため、タグは効果が適用される際にのみ考慮されます。例えば、周期的または無限の効果を持つ場合、これらのタグは効果が最初に適用される際にのみ考慮され、各周期的な実行時には考慮されません。
 
-`Attribute Based`修飾子は、`SourceTagFilter`と`TargetTagFilter`も設定できます。この修飾子の元となる属性の大きさを決定する際に、これらのフィルターを使用してその属性に対する特定の修飾子を除外します。フィルターのタグをすべて持たないソースまたはターゲットの修飾子は除外されます。
+`Attribute Based`修飾子は、`SourceTagFilter`と`TargetTagFilter`も設定できます。この修飾子の元となるAttributeの大きさを決定する際に、これらのフィルターを使用してそのAttributeに対する特定の修飾子を除外します。フィルターのタグをすべて持たないソースまたはターゲットの修飾子は除外されます。
 
 具体的には次のようになります: ソースASCとターゲットASCのタグは`GameplayEffects`によってキャプチャされます。ソースASCのタグは`GameplayEffectSpec`が作成された時点でキャプチャされ、ターゲットASCのタグは効果が実行される際にキャプチャされます。無限または期間型の効果の修飾子が「適用資格がある」と判断される際（つまり、そのアグリゲーターが資格を持つ）にこれらのフィルターが設定されている場合、キャプチャされたタグがフィルターと比較されます。
 
@@ -1283,7 +1283,7 @@ float UPAMMC_PoisonMana::CalculateBaseMagnitude_Implementation(const FGameplayEf
 
 `Local Predicted`、`Server Only`、および`Server Initiated`の[`GameplayAbilities`](#concepts-ga)では、`ExecCalc`はサーバー上でのみ呼び出されます。
 
-`Source`および`Target`の多くの属性を読み取る複雑な計算式に基づいて受け取るダメージを計算することが、`ExecCalc`の最も一般的な例です。付属のサンプルプロジェクトには、`GameplayEffectSpec`の[`SetByCaller`](#concepts-ge-spec-setbycaller)からダメージ値を読み取り、その値を`Target`からキャプチャしたアーマー`Attribute`に基づいて軽減する単純な`ExecCalc`が含まれています。詳細は`GDDamageExecCalculation.cpp/.h`を参照してください。
+`Source`および`Target`の多くのAttributeを読み取る複雑な計算式に基づいて受け取るダメージを計算することが、`ExecCalc`の最も一般的な例です。付属のサンプルプロジェクトには、`GameplayEffectSpec`の[`SetByCaller`](#concepts-ge-spec-setbycaller)からダメージ値を読み取り、その値を`Target`からキャプチャしたアーマー`Attribute`に基づいて軽減する単純な`ExecCalc`が含まれています。詳細は`GDDamageExecCalculation.cpp/.h`を参照してください。
 
 **[⬆ トップに戻る](#table-of-contents)**
 
@@ -1301,12 +1301,12 @@ float Damage = FMath::Max<float>(Spec.GetSetByCallerMagnitude(FGameplayTag::Requ
 ```
 
 <a name="concepts-ge-ec-senddata-backingdataattribute"></a>
-###### 4.5.12.1.2 バッキングデータ属性計算修飾子
+###### 4.5.12.1.2 バッキングデータAttribute計算修飾子
 `GameplayEffect`に値をハードコードしたい場合、キャプチャされた`Attributes`の1つをバッキングデータとして使用する`CalculationModifier`を使用してそれらを渡すことができます。
 
 このスクリーンショットの例では、キャプチャされたダメージ`Attribute`に50を加えています。また、これを`Override`に設定して、ハードコードされた値のみを受け取るようにすることもできます。
 
-![バッキングデータ属性計算修飾子](https://github.com/tranek/GASDocumentation/raw/master/Images/calculationmodifierbackingdataattribute.png)
+![バッキングデータAttribute計算修飾子](https://github.com/tranek/GASDocumentation/raw/master/Images/calculationmodifierbackingdataattribute.png)
 
 `ExecutionCalculation`は、`Attribute`をキャプチャする際にこの値を読み取ります。
 
@@ -1358,7 +1358,7 @@ FGSGameplayEffectContext* ContextHandle = static_cast<FGSGameplayEffectContext*>
 `ExecutionCalculation`内で`GameplayEffectSpec`を変更する場合は注意してください。`GetOwningSpecForPreExecuteMod()`のコメントを参照してください。
 
 ```c++
-/** 非constアクセス。特に属性キャプチャ後にSpecを変更する場合は注意してください。 */
+/** 非constアクセス。特にAttributeキャプチャ後にSpecを変更する場合は注意してください。 */
 FGameplayEffectSpec* GetOwningSpecForPreExecuteMod() const;
 ```
 
@@ -1750,9 +1750,9 @@ Epicの[Action RPG サンプルプロジェクト](https://www.unrealengine.com/
 
 これらはルールではなく、あくまで推奨事項です。設計や実装によって異なる場合があります。
 
-`GameplayAbilities`には、属性の変化量を修正したり、`GameplayAbility`の機能を変更したりするためのレベルがデフォルトで備わっています。
+`GameplayAbilities`には、Attributeの変化量を修正したり、`GameplayAbility`の機能を変更したりするためのレベルがデフォルトで備わっています。
 
-`GameplayAbilities`は[`Net Execution Policy`](#concepts-ga-net)に応じて、所有するクライアントおよび/またはサーバー上で実行されますが、シミュレートされたプロキシでは実行されません。`Net Execution Policy`は、`GameplayAbility`がローカルで[予測](#concepts-p)されるかどうかを決定します。これらには、[オプションのコストとクールダウン`GameplayEffects`](#concepts-ga-commit)のデフォルト動作が含まれています。`GameplayAbilities`は、[`AbilityTasks`](#concepts-at)を使用して、イベントの待機、属性の変化の待機、プレイヤーがターゲットを選択するのを待機、または`Root Motion Source`を使用してキャラクターを移動させるなど、時間を伴うアクションを実行します。**シミュレートされたクライアントは`GameplayAbilities`を実行しません**。代わりに、サーバーがアビリティを実行するとき、シミュレートされたプロキシで視覚的に再生する必要があるもの（アニメーションモンタージュなど）は、`AbilityTasks`または[`GameplayCues`](#concepts-gc)を通じて複製またはRPCされます。
+`GameplayAbilities`は[`Net Execution Policy`](#concepts-ga-net)に応じて、所有するクライアントおよび/またはサーバー上で実行されますが、シミュレートされたプロキシでは実行されません。`Net Execution Policy`は、`GameplayAbility`がローカルで[予測](#concepts-p)されるかどうかを決定します。これらには、[オプションのコストとクールダウン`GameplayEffects`](#concepts-ga-commit)のデフォルト動作が含まれています。`GameplayAbilities`は、[`AbilityTasks`](#concepts-at)を使用して、イベントの待機、Attributeの変化の待機、プレイヤーがターゲットを選択するのを待機、または`Root Motion Source`を使用してキャラクターを移動させるなど、時間を伴うアクションを実行します。**シミュレートされたクライアントは`GameplayAbilities`を実行しません**。代わりに、サーバーがアビリティを実行するとき、シミュレートされたプロキシで視覚的に再生する必要があるもの（アニメーションモンタージュなど）は、`AbilityTasks`または[`GameplayCues`](#concepts-gc)を通じて複製またはRPCされます。
 
 すべての`GameplayAbilities`は、`ActivateAbility()`関数をオーバーライドしてゲームプレイロジックを実装します。`GameplayAbility`が完了またはキャンセルされたときに実行される追加のロジックを`EndAbility()`に追加することもできます。
 
@@ -2565,7 +2565,7 @@ Epic の考え方は、「可能な限り最小限の予測を行う」ことで
 > * アビリティのアクティベーション
 > * トリガーされたイベント
 > * `GameplayEffect` の適用:
->    * 属性の変更（例外: 実行は現在予測されず、属性修飾子のみ）
+>    * Attributeの変更（例外: 実行は現在予測されず、Attribute修飾子のみ）
 >    * `GameplayTag` の変更
 > * `GameplayCue` イベント（予測可能な `GameplayEffect` 内および単独で）
 > * モンタージュ
@@ -2987,7 +2987,7 @@ Paragonではスロー効果はスタックしませんでした。それぞれ�
 <a name="debugging"></a>
 ## 6. GASのデバッグ
 GAS関連の問題をデバッグする際には、以下のような情報を知りたいことがよくあります：
-> * 「属性の値は何ですか？」
+> * 「Attributeの値は何ですか？」
 > * 「どのGameplayTagを持っていますか？」
 > * 「現在どのGameplayEffectを持っていますか？」
 > * 「どのアビリティが付与されていて、どれが実行中で、どれがアクティベーションをブロックされていますか？」
@@ -3102,7 +3102,7 @@ See the [Wiki on Logging](https://unrealcommunity.wiki/logging-lgpidy6i) for mor
 デフォルトでは、"ASC"は["フルレプリケーションモード"](#concepts-asc-rm)に設定されています。これにより、すべての"GameplayEffects"がすべてのクライアントにレプリケートされます（これはシングルプレイヤーゲームでは問題ありません）。マルチプレイヤーゲームでは、プレイヤーが所有する"ASCs"を"混合レプリケーションモード"に設定し、AIが制御するキャラクターを"最小レプリケーションモード"に設定します。これにより、プレイヤーキャラクターに適用された"GameplayEffects"はそのキャラクターの所有者にのみレプリケートされ、AIが制御するキャラクターに適用された"GameplayEffects"はクライアントにレプリケートされません。"GameplayTags"は引き続きレプリケートされ、"GameplayCues"は"レプリケーションモード"に関係なく、すべてのクライアントに信頼性のないNetMulticastとして送信されます。これにより、すべてのクライアントが必要としない"GameplayEffects"のレプリケーションによるネットワークデータが削減されます。
 
 <a name="optimizations-attributeproxyreplication"></a>
-### 7.4 属性プロキシのレプリケーション
+### 7.4 Attributeプロキシのレプリケーション
 Fortnite Battle Royale（FNBR）のような大規模なゲームでは、多くのプレイヤーが存在し、常に関連する"PlayerStates"に多くの"ASCs"が存在し、多くの"Attributes"をレプリケートします。このボトルネックを最適化するために、Fortniteは"PlayerState::ReplicateSubobjects()"で**シミュレートされたプレイヤー制御プロキシ**の"ASC"とその"AttributeSets"のレプリケーションを完全に無効にします。自律プロキシとAI制御の"Pawn"は、引き続きその["レプリケーションモード"](#concepts-asc-rm)に従って完全にレプリケートされます。常に関連する"PlayerStates"で"ASC"の"Attributes"をレプリケートする代わりに、FNBRはプレイヤーの"Pawn"にレプリケートされたプロキシ構造を使用します。"Attributes"がサーバーの"ASC"で変更されると、それらはプロキシ構造にも変更されます。クライアントはプロキシ構造からレプリケートされた"Attributes"を受け取り、それらの変更をローカルの"ASC"にプッシュします。これにより、"Attributes"のレプリケーションが"Pawn"の関連性と"NetUpdateFrequency"を利用できるようになります。このプロキシ構造は、ビットマスクで少数のホワイトリスト化された"GameplayTags"もレプリケートします。この最適化により、ネットワーク上のデータ量が削減され、Pawnの関連性を活用できます。AI制御の"Pawn"は"Pawn"上に"ASC"を持ち、すでにその関連性を使用しているため、この最適化は必要ありません。
 
 > 他のサーバー側の最適化（レプリケーショングラフなど）が行われた後でも、これがまだ必要かどうかはわかりません。また、これは最も保守性の高いパターンではありません。
@@ -3180,10 +3180,10 @@ void AGDPlayerState::PostInitializeComponents()
 このシナリオでは、[マクロから作成された関数を呼び出す](#concepts-as-attributes)代わりに、`ASC` 上の関数を使用して `AttributeSet` の値を読み取り、設定します。
 
 ```c++
-/** 属性の現在の（最終的な）値を返します */
+/** Attributeの現在の（最終的な）値を返します */
 float GetNumericAttribute(const FGameplayAttribute &Attribute) const;
 
-/** 属性の基本値を設定します。既存のアクティブな修飾子はクリアされず、新しい基本値に基づいて動作します。 */
+/** Attributeの基本値を設定します。既存のアクティブな修飾子はクリアされず、新しい基本値に基づいて動作します。 */
 void SetNumericAttributeBase(const FGameplayAttribute &Attribute, float NewBaseValue);
 ```
 
@@ -3333,7 +3333,7 @@ AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FG
 
 > 両ゲームとも、プレイヤーが操作するキャラクターには基本的にMixedモードを使用し、AIが操作するキャラクター（AIミニオン、ジャングルクリープ、AIハスクなど）にはMinimalモードを使用しています。これは、マルチプレイヤーゲームでこのシステムを使用するほとんどの人に推奨される設定です。プロジェクトの早い段階でこれらを設定するほど良いです。
 >
-> Fortniteはさらに最適化を進めています。実際には、シミュレートされたプロキシに対して`UAbilitySystemComponent`を全くレプリケートしません。このコンポーネントと属性のサブオブジェクトは、所有するFortniteプレイヤーステートクラスの`::ReplicateSubobjects()`内でスキップされます。代わりに、アビリティシステムコンポーネントから最小限のレプリケートデータをポーン上の構造体にプッシュします（基本的には属性値のサブセットと、ビットマスクでレプリケートされるタグのホワイトリストサブセット）。これを「プロキシ」と呼びます。受信側では、ポーン上でレプリケートされたプロキシデータを取得し、それをプレイヤーステート上のアビリティシステムコンポーネントにプッシュバックします。そのため、FNBRでは各プレイヤーにASCがありますが、それは直接レプリケートされず、代わりにポーン上の最小プロキシ構造を介してデータをレプリケートし、受信側でASCにルーティングされます。この利点は、A）より最小限のデータセットであること、B）ポーンの関連性を活用できることです。
+> Fortniteはさらに最適化を進めています。実際には、シミュレートされたプロキシに対して`UAbilitySystemComponent`を全くレプリケートしません。このコンポーネントとAttributeのサブオブジェクトは、所有するFortniteプレイヤーステートクラスの`::ReplicateSubobjects()`内でスキップされます。代わりに、アビリティシステムコンポーネントから最小限のレプリケートデータをポーン上の構造体にプッシュします（基本的にはAttribute値のサブセットと、ビットマスクでレプリケートされるタグのホワイトリストサブセット）。これを「プロキシ」と呼びます。受信側では、ポーン上でレプリケートされたプロキシデータを取得し、それをプレイヤーステート上のアビリティシステムコンポーネントにプッシュバックします。そのため、FNBRでは各プレイヤーにASCがありますが、それは直接レプリケートされず、代わりにポーン上の最小プロキシ構造を介してデータをレプリケートし、受信側でASCにルーティングされます。この利点は、A）より最小限のデータセットであること、B）ポーンの関連性を活用できることです。
 >
 > 他のサーバー側の最適化（レプリケーショングラフなど）が行われた後でも、これがまだ必要かどうかはわかりません。また、これは最も保守性の高いパターンではありません。
 
@@ -3355,7 +3355,7 @@ AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FG
 
 > 最初の問題は、所有するアクターに`IGameplayTagAssetInterface`と`IAbilitySystemInterface`を実装することです。前者は可能かもしれません：すべてのASCからタグを集約するだけです（ただし注意が必要です。`HasAllMatchingGameplayTags`は、ASC間の集約によってのみ満たされる場合があります。単に各ASCに呼び出しを転送し、結果をORするだけでは不十分です）。しかし、後者はさらに難しいです：どのASCが権威あるものですか？誰かがGEを適用したい場合、どのASCがそれを受け取るべきですか？これらを解決することは可能かもしれませんが、この側面が最も難しい部分です：複数のASCを持つ所有者。
 >
-> ポーンと武器に別々のASCを持つことは、それ自体で意味をなす場合があります。例えば、武器を記述するタグと所有するポーンを記述するタグを区別する場合です。武器に付与されたタグが所有者にも「適用」され、他には適用されない（例えば、属性とGEは独立しているが、所有者は所有するタグを集約する）というのは理にかなっているかもしれません。これが機能する可能性は十分にあります。ただし、同じ所有者を持つ複数のASCを持つことは、やや複雑になる可能性があります。
+> ポーンと武器に別々のASCを持つことは、それ自体で意味をなす場合があります。例えば、武器を記述するタグと所有するポーンを記述するタグを区別する場合です。武器に付与されたタグが所有者にも「適用」され、他には適用されない（例えば、AttributeとGEは独立しているが、所有者は所有するタグを集約する）というのは理にかなっているかもしれません。これが機能する可能性は十分にあります。ただし、同じ所有者を持つ複数のASCを持つことは、やや複雑になる可能性があります。
 
 7. 所有するクライアント上でローカルに予測されたアビリティのクールダウン期間をサーバーが上書きするのを防ぐ方法はありますか？高遅延のシナリオでは、所有するクライアントがローカルのクールダウンが終了したときにアビリティを再度「試みる」ことができるようになりますが、サーバーではまだクールダウン中です。所有するクライアントのアクティベーション要求がネットワークを介してサーバーに到達する頃には、サーバーがクールダウンを終了している可能性があります。または、サーバーが残りのミリ秒の間アクティベーション要求をキューに入れることができるかもしれません。現在の状態では、高遅延のクライアントは低遅延のクライアントに比べてアビリティを再アクティベートできるまでの遅延が長くなります。これは、1秒未満のクールダウンを持つ基本攻撃のような非常に短いクールダウンアビリティで最も顕著です。サーバーがローカルに予測されたアビリティのクールダウン期間を上書きするのを防ぐ方法がない場合、Epicは高遅延の影響を軽減するためにどのような戦略を採用していますか？別の例を挙げると、EpicはParagonの基本攻撃や他のアビリティをどのように設計して、高遅延のプレイヤーが低遅延のプレイヤーと同じ速度で攻撃やアクティベートできるようにしましたか？
 
@@ -3412,7 +3412,7 @@ AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FG
 >
 > * アビリティがアクティベート/終了/キャンセルされたタイミング
 > * GameplayEffectが適用/削除されたタイミング
-> * 属性値（フレームXでの属性値が何であったか）
+> * Attribute値（フレームXでのAttribute値が何であったか）
 >
 > これはアビリティシステムレベルで一般的に実行できると思います。ただし、UGameplayAbility内のユーザー定義ロジックを完全にロールバック可能にするには、さらに作業が必要です。UGameplayAbilityのサブクラスを作成し、それを完全にロールバック可能にし、より限定された機能セットまたはロールバック対応としてマークされたアビリティタスクのみを使用できるようにする可能性があります。そのようなものです。また、アニメーションイベントやルートモーションの処理方法にも多くの影響があります。
 >
