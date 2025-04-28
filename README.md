@@ -259,6 +259,7 @@ GASの現在の課題:
 | GA_           | GameplayAbility         |
 | GC_           | GameplayCue             |
 | GE_           | GameplayEffect          |
+
 **[⬆ トップに戻る](#table-of-contents)**
 
 <a name="setup"></a>
