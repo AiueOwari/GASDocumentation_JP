@@ -291,9 +291,9 @@ GASを使用するプロジェクトをセットアップする基本手順:
 
 <a name="concepts-asc"></a>
 ### 4.1 アビリティシステムコンポーネント
-`アビリティシステムコンポーネント`（`ASC`）はGASの中心です。これは`UActorComponent`（[`UAbilitySystemComponent`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/UAbilitySystemComponent/index.html)）であり、システムとのすべてのやり取りを処理します。[`GameplayAbilities`](#concepts-ga)を使用したり、[`Attribute`](#concepts-a)を持ったり、[`GameplayEffects`](#concepts-ge)を受け取る`アクター`は、1つの`ASC`をアタッチする必要があります。これらのオブジェクトはすべて`ASC`内に存在し、管理され、レプリケートされます（ただし、`Attribute`は[`Attribute Set`](#concepts-as)によってレプリケートされます）。開発者はこれをサブクラス化することが推奨されていますが、必須ではありません。
+`AbilitySystemComponent`（`ASC`）はGASの中心です。これは`UActorComponent`（[`UAbilitySystemComponent`](https://docs.unrealengine.com/en-US/API/Plugins/GameplayAbilities/UAbilitySystemComponent/index.html)）であり、システムとのすべてのやり取りを処理します。[`GameplayAbilities`](#concepts-ga)を使用したり、[`Attribute`](#concepts-a)を持ったり、[`GameplayEffects`](#concepts-ge)を受け取る`アクター`は、1つの`ASC`をアタッチする必要があります。これらのオブジェクトはすべて`ASC`内に存在し、管理され、レプリケートされます（ただし、`Attribute`は[`Attribute Set`](#concepts-as)によってレプリケートされます）。開発者はこれをサブクラス化することが推奨されていますが、必須ではありません。
 
-`ASC`がアタッチされている`アクター`は、`ASC`の`OwnerActor`と呼ばれます。`ASC`の物理的な表現である`アクター`は`AvatarActor`と呼ばれます。`OwnerActor`と`AvatarActor`は、MOBAゲームの単純なAIミニオンのように同じ`アクター`である場合もあります。また、MOBAゲームのプレイヤーが操作するヒーローのように、`OwnerActor`が`PlayerState`で、`AvatarActor`がヒーローの`Character`クラスである場合もあります。ほとんどの`アクター`は、自身に`ASC`を持ちます。もし`アクター`がリスポーンし、リスポーン間で`Attribute`や`GameplayEffects`の永続性が必要な場合（MOBAのヒーローのように）、理想的な`ASC`の場所は`PlayerState`です。
+`ASC`がアタッチされている`Actor`は、`ASC`の`OwnerActor`と呼ばれます。`ASC`の物理的な表現である`Actor`は`AvatarActor`と呼ばれます。`OwnerActor`と`AvatarActor`は、MOBAゲームの単純なAIミニオンのように同じ`Actor`である場合もあります。また、MOBAゲームのプレイヤーが操作するヒーローのように、`OwnerActor`が`PlayerState`で、`AvatarActor`がヒーローの`Character`クラスである場合もあります。ほとんどの`Actor`は、自身に`ASC`を持ちます。もし`アクター`がリスポーンし、リスポーン間で`Attribute`や`GameplayEffects`の永続性が必要な場合（MOBAのヒーローのように）、理想的な`ASC`の場所は`PlayerState`です。
 
 **注意:** `ASC`が`PlayerState`にある場合、`PlayerState`の`NetUpdateFrequency`を増やす必要があります。デフォルトでは非常に低い値に設定されており、クライアントで`Attribute`や`GameplayTags`の変更が遅延またはラグのように見える原因となる可能性があります。[`Adaptive Network Update Frequency`](https://docs.unrealengine.com/en-US/Gameplay/Networking/Actors/Properties/index.html#adaptivenetworkupdatefrequency)を有効にすることを忘れないでください。Fortniteではこれが使用されています。
 
